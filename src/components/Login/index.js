@@ -3,7 +3,7 @@ import { } from '@material-ui/core';
 
 // 3rd party libraries
 import {
-    Grid, Button, FormControl, Input, InputAdornment, InputLabel, IconButton
+    Grid, Button, FormControl, Input, InputAdornment, InputLabel, IconButton, Link
 } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
@@ -17,7 +17,8 @@ const Login = ({
     handleEmailChange,
     handlePasswordChange,
     handleClickShowPassword,
-    handleMouseDownPassword
+    handleMouseDownPassword,
+    onForgotPasswordClick
 
 }) => (
     <Grid container justify="center" className={classes.loginBox}>
@@ -70,6 +71,16 @@ const Login = ({
             >
                 Login
             </Button>
+        </Grid>
+        <Grid xs={8} item>
+            <Link
+                component="button"
+                variant="body2"
+                onClick={onForgotPasswordClick}
+                style={{ marginTop: 10, textAlign: 'center', width: '100%' }}
+            >
+                Forgot Password?
+            </Link>
         </Grid>
     </Grid>
 )

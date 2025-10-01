@@ -4,7 +4,8 @@ import { Redirect } from 'react-router-dom';
 // 3rd party libraries
 import {
     Paper, Tab, Tabs, Grid, withStyles,
-    Snackbar
+    Snackbar, Dialog, DialogTitle, DialogContent, DialogActions,
+    Button, TextField, CircularProgress
 } from '@material-ui/core';
 import MuiAlert from '@material-ui/lab/Alert';
 
@@ -34,6 +35,13 @@ const Landing = ({ classes }) => {
         'message': ''
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+    const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+    const [success, setSuccess] = useState({
+        'isSuccess': false,
+        'message': ''
+    });
 
     const handleTabChange = (_, newValue) => {
         setTab(newValue);
@@ -137,6 +145,65 @@ const Landing = ({ classes }) => {
             });
     };
 
+    const handleForgotPasswordClick = () => {
+        setShowForgotPassword(true);
+        setForgotPasswordEmail(email);
+    };
+
+    const handleForgotPasswordSubmit = () => {
+        if (!forgotPasswordEmail.trim()) {
+            setError({
+                'isError': true,
+                'message': 'Please enter your email address'
+            });
+            return;
+        }
+
+        setForgotPasswordLoading(true);
+        
+        const data = {
+            'email': forgotPasswordEmail,
+        };
+
+        fetch(`${BASE_URL}/forgot-password`,
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        )
+            .then(response => response.json())
+            .then(data => {
+                setForgotPasswordLoading(false);
+                // Backend always returns success: true for security (no email enumeration)
+                setSuccess({
+                    'isSuccess': true,
+                    'message': data['description'] || 'If an account with that email exists, password reset instructions have been sent'
+                });
+                setShowForgotPassword(false);
+                setForgotPasswordEmail('');
+            })
+            .catch(error => {
+                setForgotPasswordLoading(false);
+                setError({
+                    'isError': true,
+                    'message': 'Unable to connect to the server. Please try again later.'
+                });
+            });
+    };
+
+    const handleForgotPasswordCancel = () => {
+        setShowForgotPassword(false);
+        setForgotPasswordEmail('');
+    };
+
+    const handleForgotPasswordEmailChange = event => {
+        const { value } = event.target;
+        setForgotPasswordEmail(value);
+    };
+
     const handleSnackBarClose = (_, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -144,6 +211,11 @@ const Landing = ({ classes }) => {
 
         setError({
             'isError': false,
+            'message': ''
+        });
+
+        setSuccess({
+            'isSuccess': false,
             'message': ''
         });
     };
@@ -157,24 +229,35 @@ const Landing = ({ classes }) => {
 
             <NavBar />
 
-            {
-                error.isError && (
-                    <Snackbar
-                        open={error.isError}
-                        autoHideDuration={6000}
-                        onClose={handleSnackBarClose}
-                    >
-                        <MuiAlert
-                            elevation={6}
-                            variant="filled"
-                            onClose={handleSnackBarClose}
-                            severity="error"
-                        >
-                            {error.message}
-                        </MuiAlert>
-                    </Snackbar>
-                )
-            }
+            <Snackbar
+                open={error.isError}
+                autoHideDuration={6000}
+                onClose={handleSnackBarClose}
+            >
+                <MuiAlert
+                    elevation={6}
+                    variant="filled"
+                    onClose={handleSnackBarClose}
+                    severity="error"
+                >
+                    {error.message}
+                </MuiAlert>
+            </Snackbar>
+
+            <Snackbar
+                open={success.isSuccess}
+                autoHideDuration={6000}
+                onClose={handleSnackBarClose}
+            >
+                <MuiAlert
+                    elevation={6}
+                    variant="filled"
+                    onClose={handleSnackBarClose}
+                    severity="success"
+                >
+                    {success.message}
+                </MuiAlert>
+            </Snackbar>
 
             <Grid container className={classes.root}>
                 <Grid item xs={4}>
@@ -207,6 +290,7 @@ const Landing = ({ classes }) => {
                                     handlePasswordChange={handlePasswordChange}
                                     handleClickShowPassword={handleClickShowPassword}
                                     handleMouseDownPassword={handleMouseDownPassword}
+                                    onForgotPasswordClick={handleForgotPasswordClick}
                                 />
                             ) : (
                                     <Register
@@ -231,6 +315,37 @@ const Landing = ({ classes }) => {
 
                 </Grid>
             </Grid>
+
+            <Dialog open={showForgotPassword} onClose={handleForgotPasswordCancel}>
+                <DialogTitle>Reset Your Password</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Email Address"
+                        type="email"
+                        fullWidth
+                        value={forgotPasswordEmail}
+                        onChange={handleForgotPasswordEmailChange}
+                        InputProps={{
+                            endAdornment: <span>@eprcug.org</span>
+                        }}
+                        helperText="Enter your email address to receive secure password reset instructions. The reset link will expire in 1 hour."
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleForgotPasswordCancel} color="primary">
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleForgotPasswordSubmit} 
+                        color="primary"
+                        disabled={forgotPasswordLoading}
+                    >
+                        {forgotPasswordLoading ? <CircularProgress size={20} /> : 'Send Reset Email'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     )
 }

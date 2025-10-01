@@ -9,6 +9,7 @@ import {
 // components imports
 import Main from './layout/main';
 import Landing from './layout/landing';
+import ResetPassword from './components/ResetPassword';
 
 
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
       <Switch>
         <Route path='/' exact component={Landing} />
         <Route path='/portal' exact component={Main} />
+        <Route path='/reset-password' exact component={ResetPassword} />
       </Switch>
     </Router>
   )
